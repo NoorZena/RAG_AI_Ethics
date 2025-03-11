@@ -5,8 +5,9 @@ from llama_index.core.node_parser import SentenceSplitter
 from llama_index.embeddings.mistralai import MistralAIEmbedding
 from llama_index.llms.mistralai import MistralAI
 
-# Load API Key
-MISTRAL_API_KEY = os.getenv("EQGOZOmRj95QxXpOJUI0yOMjnzTF1ym5")
+# ✅ Retrieve API key from Streamlit secrets
+MISTRAL_API_KEY = st.secrets["MISTRAL_API_KEY"]
+os.environ["MISTRAL_API_KEY"] = MISTRAL_API_KEY
 
 # Streamlit UI
 st.title("📚 AI Ethics RAG Agent")
@@ -16,6 +17,7 @@ st.write("This app retrieves and summarizes information from an AI ethics resear
 uploaded_file = st.file_uploader("Upload a research paper (PDF)", type=["pdf"])
 
 if uploaded_file is not None:
+    # Save the uploaded file
     with open("uploaded.pdf", "wb") as f:
         f.write(uploaded_file.getbuffer())
 
@@ -27,7 +29,6 @@ if uploaded_file is not None:
     nodes = splitter.get_nodes_from_documents(documents)
 
     # Set up Mistral AI
-    os.environ["MISTRAL_API_KEY"] = MISTRAL_API_KEY
     summary_index = SummaryIndex(nodes[:10])
     vector_index = VectorStoreIndex(nodes[:10])
 
