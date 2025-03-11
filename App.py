@@ -1,3 +1,4 @@
+import time
 import os
 import streamlit as st
 from llama_index.core import SimpleDirectoryReader, SummaryIndex, VectorStoreIndex, Settings
@@ -24,7 +25,7 @@ except SDKError as e:
 
 # Streamlit UI
 st.title("📚 AI Ethics RAG Agent")
-st.write("This app retrieves and summarizes information from research papers.")
+st.write("This app retrieves and summarizes information from an AI ethics research paper.")
 
 # Upload PDF
 uploaded_file = st.file_uploader("Upload a research paper (PDF)", type=["pdf"])
@@ -58,16 +59,28 @@ if uploaded_file is not None:
 
         if query:
             try:
-                if "summarize" in query.lower():
-                    response = summary_query_engine.query(query)
-                else:
-                    response = vector_query_engine.query(query)
+                max_retries = 3  # ✅ Set max retries to prevent spamming
+                for attempt in range(max_retries):
+                    try:
+                        if "summarize" in query.lower():
+                            response = summary_query_engine.query(query)
+                        else:
+                            response = vector_query_engine.query(query)
 
-                # Store query and response in session state
-                st.session_state.chat_history.append((query, response.response))
+                        # Store query and response in session state
+                        st.session_state.chat_history.append((query, response.response))
 
-                # Clear the input box for new queries
-                st.experimental_rerun()
+                        # Clear the input box for new queries
+                        st.experimental_rerun()
+                        break  # ✅ Exit retry loop on success
+                    
+                    except SDKError as e:
+                        if "rate limit exceeded" in str(e).lower():
+                            st.warning(f"⚠️ Mistral API rate limit exceeded. Retrying in 5 seconds... (Attempt {attempt+1}/{max_retries})")
+                            time.sleep(5)  # ✅ Wait 5 seconds before retrying
+                        else:
+                            st.error(f"❌ API Error: {e}")
+                            break  # Stop retries if it's another error
 
             except Exception as e:
                 st.error(f"❌ Error while processing query: {e}")
