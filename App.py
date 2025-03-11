@@ -4,7 +4,7 @@ from llama_index.core import SimpleDirectoryReader, SummaryIndex, VectorStoreInd
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.embeddings.mistralai import MistralAIEmbedding
 from llama_index.llms.mistralai import MistralAI
-from mistralai.models import SDKError  # ✅ Import error handling for Mistral
+from mistralai.models import SDKError  # Import error handling for Mistral
 
 # ✅ Retrieve API key from Streamlit secrets
 try:
@@ -49,8 +49,13 @@ if uploaded_file is not None:
         summary_query_engine = summary_index.as_query_engine(response_mode="tree_summarize", use_async=True)
         vector_query_engine = vector_index.as_query_engine()
 
+        # ✅ Multi-query Support using Session State
+        if "chat_history" not in st.session_state:
+            st.session_state.chat_history = []
+
         # User input for queries
         query = st.text_input("Ask a question about the paper:")
+
         if query:
             try:
                 if "summarize" in query.lower():
@@ -58,11 +63,20 @@ if uploaded_file is not None:
                 else:
                     response = vector_query_engine.query(query)
 
-                st.write("### Response:")
-                st.write(response.response)  # ✅ Extract only the text response
-                
-            except SDKError as e:
-                st.error(f"❌ Mistral API Error while processing query: {e}")
+                # Store query and response in session state
+                st.session_state.chat_history.append((query, response.response))
+
+                # Clear the input box for new queries
+                st.experimental_rerun()
+
+            except Exception as e:
+                st.error(f"❌ Error while processing query: {e}")
+
+        # Display past queries and responses
+        st.write("### Chat History:")
+        for q, r in st.session_state.chat_history:
+            with st.expander(f"🔹 {q}"):
+                st.write(r)
 
     except Exception as e:
         st.error(f"❌ Error processing document: {e}")
