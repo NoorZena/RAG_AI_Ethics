@@ -38,5 +38,5 @@ Researcg Paper RAG Agent is a **Streamlit-based AI assistant** that retrieves an
 
 ---
 
-## 🏗️ Built with ❤️ by [Your Name](https://github.com/your-username)  
+## 🏗️ Built with ❤️ by Noor Zena  
 🌟 If you like this project, consider **starring** ⭐ it on GitHub!  
