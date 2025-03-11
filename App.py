@@ -49,4 +49,5 @@ if uploaded_file is not None:
             response = vector_query_engine.query(query)
 
         st.write("### Response:")
-        st.write(response)
+        st.write(response.response)  # ✅ Extract only the text response
+
