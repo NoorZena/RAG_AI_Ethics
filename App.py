@@ -1,11 +1,10 @@
-import time
 import os
 import streamlit as st
 from llama_index.core import SimpleDirectoryReader, SummaryIndex, VectorStoreIndex, Settings
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.embeddings.mistralai import MistralAIEmbedding
 from llama_index.llms.mistralai import MistralAI
-from mistralai.models import SDKError  # Import error handling for Mistral
+from mistralai.models import SDKError  # ✅ Import error handling for Mistral
 
 # ✅ Retrieve API key from Streamlit secrets
 try:
@@ -50,46 +49,20 @@ if uploaded_file is not None:
         summary_query_engine = summary_index.as_query_engine(response_mode="tree_summarize", use_async=True)
         vector_query_engine = vector_index.as_query_engine()
 
-        # ✅ Multi-query Support using Session State
-        if "chat_history" not in st.session_state:
-            st.session_state.chat_history = []
-
         # User input for queries
         query = st.text_input("Ask a question about the paper:")
-
         if query:
             try:
-                max_retries = 3  # ✅ Set max retries to prevent spamming
-                for attempt in range(max_retries):
-                    try:
-                        if "summarize" in query.lower():
-                            response = summary_query_engine.query(query)
-                        else:
-                            response = vector_query_engine.query(query)
+                if "summarize" in query.lower():
+                    response = summary_query_engine.query(query)
+                else:
+                    response = vector_query_engine.query(query)
 
-                        # Store query and response in session state
-                        st.session_state.chat_history.append((query, response.response))
-
-                        # Clear the input box for new queries
-                        st.experimental_rerun()
-                        break  # ✅ Exit retry loop on success
-                    
-                    except SDKError as e:
-                        if "rate limit exceeded" in str(e).lower():
-                            st.warning(f"⚠️ Mistral API rate limit exceeded. Retrying in 5 seconds... (Attempt {attempt+1}/{max_retries})")
-                            time.sleep(5)  # ✅ Wait 5 seconds before retrying
-                        else:
-                            st.error(f"❌ API Error: {e}")
-                            break  # Stop retries if it's another error
-
-            except Exception as e:
-                st.error(f"❌ Error while processing query: {e}")
-
-        # Display past queries and responses
-        st.write("### Chat History:")
-        for q, r in st.session_state.chat_history:
-            with st.expander(f"🔹 {q}"):
-                st.write(r)
+                st.write("### Response:")
+                st.write(response.response)  # ✅ Extract only the text response
+                
+            except SDKError as e:
+                st.error(f"❌ Mistral API Error while processing query: {e}")
 
     except Exception as e:
         st.error(f"❌ Error processing document: {e}")
