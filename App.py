@@ -24,7 +24,7 @@ except SDKError as e:
 
 # Streamlit UI
 st.title("📚 AI Ethics RAG Agent")
-st.write("This app retrieves and summarizes information from an AI ethics research paper.")
+st.write("This app retrieves and summarizes information from research papers.")
 
 # Upload PDF
 uploaded_file = st.file_uploader("Upload a research paper (PDF)", type=["pdf"])
