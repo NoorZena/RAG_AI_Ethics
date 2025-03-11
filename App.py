@@ -1,6 +1,6 @@
 import os
 import streamlit as st
-from llama_index.core import SimpleDirectoryReader, SummaryIndex, VectorStoreIndex
+from llama_index.core import SimpleDirectoryReader, SummaryIndex, VectorStoreIndex, Settings
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.embeddings.mistralai import MistralAIEmbedding
 from llama_index.llms.mistralai import MistralAI
@@ -8,6 +8,10 @@ from llama_index.llms.mistralai import MistralAI
 # ✅ Retrieve API key from Streamlit secrets
 MISTRAL_API_KEY = st.secrets["MISTRAL_API_KEY"]
 os.environ["MISTRAL_API_KEY"] = MISTRAL_API_KEY
+
+# ✅ Explicitly set the embedding model
+Settings.llm = MistralAI(api_key=MISTRAL_API_KEY)
+Settings.embed_model = MistralAIEmbedding(model_name="mistral-embed", api_key=MISTRAL_API_KEY)
 
 # Streamlit UI
 st.title("📚 AI Ethics RAG Agent")
@@ -28,9 +32,9 @@ if uploaded_file is not None:
     splitter = SentenceSplitter(chunk_size=512)
     nodes = splitter.get_nodes_from_documents(documents)
 
-    # Set up Mistral AI
+    # ✅ Use explicit embedding settings
     summary_index = SummaryIndex(nodes[:10])
-    vector_index = VectorStoreIndex(nodes[:10])
+    vector_index = VectorStoreIndex(nodes[:10])  # No more default model errors
 
     # Query Engines
     summary_query_engine = summary_index.as_query_engine(response_mode="tree_summarize", use_async=True)
